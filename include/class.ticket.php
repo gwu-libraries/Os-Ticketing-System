@@ -43,6 +43,9 @@ class Ticket{
     var $subject;
     var $helptopic;
     var $overdue;
+    var $type;
+    var $source;
+    //var $assistance;
 
     var $lastMsgId;
     
@@ -76,6 +79,9 @@ class Ticket{
             $this->updated  =$row['updated'];
             $this->duedate  =$row['duedate'];
             $this->closed   =$row['closed'];
+	    $this->type=$row['issue_type'];
+	    //$this->assistance=$row['assistance_type'];
+	    $this->source=$row['source'];
             $this->lastmsgdate  =$row['lastmessagedate'];
             $this->lastrespdate  =$row['lastresponsedate'];
             $this->lock_id  =$row['lock_id'];
@@ -137,6 +143,12 @@ class Ticket{
     function getName(){
         return $this->fullname;
     }
+    function getType(){
+	return $this->type;
+    }
+    /*function getAssistance(){
+	return $this->assistance;
+    }*/
 
     function getSubject() {
         return $this->subject;
@@ -1148,7 +1160,52 @@ class Ticket{
     }
 
 
+function updateinfo($var,&$errors)
+	{
+		 global $cfg,$thisuser;
 
+         	$fields=array();
+		$fields['topicId']  = array('type'=>'int',      'required'=>1, 'error'=>'Invalid Selection');
+		$fields['source'] = array('type'=>'text',      'required'=>1, 'error'=>'Invalid Source');
+		$fields['type'] = array('type'=>'text',      'required'=>1, 'error'=>'Invalid User');
+		
+		 $params = new Validator($fields);
+         	if(!$params->validate($var)){
+             		$errors=array_merge($errors,$params->errors());
+         		}
+
+		$cleartopic=false;
+        	$topicDesc='';
+        	if($var['topicId'] && ($topic= new Topic($var['topicId'])) && $topic->getId()) {
+            		$topicDesc=$topic->getName();
+        	}
+		elseif(!$var['topicId'] && $this->getTopicId()){
+            		$topicDesc='';
+            		$cleartopic=true;
+        	}
+
+		 if(!$errors){
+             		$sql='UPDATE '.TICKET_TABLE.' SET updated=NOW() '.
+			',source='.db_input($var['source']).
+			',issue_type='.db_input($var['type']).
+			',resolved_by='.db_input($this->getStaffId());
+		 if($topicDesc || $cleartopic) { //we're overwriting previous topic.
+                 $sql.=',helptopic='.db_input($topicDesc);
+             }
+		$sql.=' WHERE ticket_id='.db_input($this->getId());
+		//echo $sql;
+             if(db_query($sql)){
+                 $this->reload();
+                 return true;
+             }
+	echo "table updated";
+
+	}
+					
+	return false;
+	echo "update failed";
+
+	}
 
     /*
      * The mother of all functions...You break it you fix it!
@@ -1170,6 +1227,8 @@ class Ticket{
             $fields['topicId']  = array('type'=>'int',      'required'=>1, 'error'=>'Select help topic');
         }elseif(strcasecmp($origin,'staff')==0){ //tickets created by staff...e.g on callins.
             $fields['deptId']   = array('type'=>'int',      'required'=>1, 'error'=>'Dept. required');
+	    $fields['type']   = array('type'=>'string',   'required'=>1, 'error'=>'Indicate type');
+	    //$fields['assistance']   = array('type'=>'string',   'required'=>1, 'error'=>'Indicate assistance type');
             $fields['source']   = array('type'=>'string',   'required'=>1, 'error'=>'Indicate source');
             $fields['duedate']  = array('type'=>'date',    'required'=>0, 'error'=>'Invalid date - must be MM/DD/YY');
         }else { //Incoming emails
@@ -1314,7 +1373,8 @@ class Ticket{
                 ',helptopic='.db_input(Format::striptags($topicDesc)).
                 ',phone="'.db_input($var['phone'],false).'"'.
                 ',phone_ext='.db_input($var['phone_ext']?$var['phone_ext']:'').
-                ',ip_address='.db_input($ipaddress).        
+                ',ip_address='.db_input($ipaddress).
+		',issue_type='.db_input($var['type']).        
                 ',source='.db_input($source);
 
         //Make sure the origin is staff - avoid firebug hack!
@@ -1443,7 +1503,7 @@ class Ticket{
         
         if(!$var['issue'])
             $errors['issue']='Summary of the issue required';
-        if($var['source'] && !in_array(strtolower($var['source']),array('email','phone','other')))
+        if($var['source'] && !in_array(strtolower($var['source']),array('web','email','phone','other')))
             $errors['source']='Invalid source - '.Format::htmlchars($var['source']);
 
         $var['emailId']=0;//clean crap.

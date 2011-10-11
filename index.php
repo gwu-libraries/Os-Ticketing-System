@@ -25,7 +25,7 @@ if($thisclient && is_object($thisclient) && $thisclient->isValid()) {
 require(CLIENTINC_DIR.'header.inc.php');
 ?>
 <div id="index">
-<h1>Welcome to the support center</h1>
+<h1>Welcome to the Gelman Library support center</h1>
 <p class="big">In order to streamline support requests and better serve you, we utilize a support ticket system. Every support request is assigned a unique ticket number which you can use to track the progress and responses online. For your reference we provide complete archives and history of all your support requests. A valid email address is required.</p>
 <hr />
 <br />

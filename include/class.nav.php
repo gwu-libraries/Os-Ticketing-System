@@ -33,6 +33,8 @@ class StaffNav {
             $tabs['topics']=array('desc'=>'Help Topics','href'=>'admin.php?t=topics','title'=>'Help Topics');
             $tabs['staff']=array('desc'=>'Staff','href'=>'admin.php?t=staff','title'=>'Staff Members');
             $tabs['depts']=array('desc'=>'Departments','href'=>'admin.php?t=depts','title'=>'Departments');
+	    $tabs['tests']=array('desc'=>'Reports','href'=>'admin.php?t=tests','title'=>'tests');
+
         }else {
             $tabs['tickets']=array('desc'=>'Tickets','href'=>'tickets.php','title'=>'Ticket Queue');
             if($thisuser && $thisuser->canManageKb()){

@@ -23,10 +23,12 @@ require_once(INCLUDE_DIR.'class.banlist.php');
 
 $page='';
 $ticket=null; //clean start.
+session_start();
 //LOCKDOWN...See if the id provided is actually valid and if the user has access.
 if(!$errors && ($id=$_REQUEST['id']?$_REQUEST['id']:$_POST['ticket_id']) && is_numeric($id)) {
     $deptID=0;
     $ticket= new Ticket($id);
+	$_SESSION['ticketId'] = "$id";
     if(!$ticket or !$ticket->getDeptId())
         $errors['err']='Unknown ticket ID#'.$id; //Sucker...invalid id
     elseif(!$thisuser->isAdmin()  && (!$thisuser->canAccessDept($ticket->getDeptId()) && $thisuser->getId()!=$ticket->getStaffId()))
@@ -46,7 +48,35 @@ if(!$errors && ($id=$_REQUEST['id']?$_REQUEST['id']:$_POST['ticket_id']) && is_n
     //TODO: Check perm here..
     $page='newticket.inc.php';
 }
+elseif($_REQUEST['a']=='actualclose')
+{
+	 $ticket=new ticket($_SESSION['ticketId']);
+
+	if(!$ticket || !$thisuser->canEditTickets())
+	//$ticket=new ticket($_SESSION['ticketId']);
+	//if(!$ticket )
+                $errors['err']='Perm. Denied. You are not allowed to edit tickets';
+            elseif($ticket->updateinfo($_POST,$errors) && $ticket->close()){
+                $msg='Ticket updated and closed successfully';
+                $page=$ticket=null;;
+            }elseif(!$errors['err']) {
+                $errors['err']='Error(s) occured! Try again.';
+}
+
+}
 //At this stage we know the access status. we can process the post.
+if($_GET['action']=="assign") {
+    $assign_message = "Ticket claimed by user ".$_GET['assign_message'];
+    if(!$thisuser->isadmin()  && !$thisuser->isManager() && $thisuser->getId()!=$ticket->getStaffId() &&  !$thisuser->isStaff()){
+            $errors['err']='Ticket already assigned. You do not have permission to re-assign assigned tickets';
+    }
+    if(!$errors && $ticket->assignStaff($_GET['staff_id'],$assign_message)){
+        $msg='Ticket Assigned to staff';
+        $ticket->reload();//Reload ticket info following post processing
+    }else{
+        $errors['err']=$errors['err']?$errors['err']:'Unable to assign the ticket';
+    }
+}  
 if($_POST && !$errors):
 
     if($ticket && $ticket->getId()) {
@@ -87,9 +117,56 @@ if($_POST && !$errors):
                 //Set status if any.
                 $wasOpen=$ticket->isOpen();
                 if(isset($_POST['ticket_status']) && $_POST['ticket_status']) {
+			mysql_connect("localhost", "root", "sql4gwdroid");
+			mysql_select_db("osticket");
+			$query="select source,issue_type,helptopic from ost_ticket where ticket_id=";
+			$query.=$ticket->getId();
+			$result=mysql_query($query);
+			$row=mysql_fetch_array($result);
+			//echo $row['source']. ' ' . $row['issue_type'] . ' ' .$row['helptopic'];
+		//	$myFile = "/tmp/testFile.txt";
+		//	$fh = fopen($myFile, 'w') or die("can't open file");
+		//	fwrite($fh, $ticket->getId() ."\n");
+		//	fwrite($fh,  $row['source']."\n");
+		//	fwrite($fh,  $row['issue_type']."\n");
+		//	fwrite($fh,  $row['helptopic']."\n");
+		//	fclose($fh);
+			if($row['source']== NULL || $row['issue_type'] == NULL || $row['helptopic'] == NULL)
+			{
+			mysql_free_result($query);
+			//mysql_close($link);	
+			$page='closeform.inc.php';
+			}
+			else
+			{
+			
+			 mysql_free_result($query);
+			//$page=$ticket=null;
+			 //$ticket=new ticket($_SESSION['ticketId']);
+
+			$sql='UPDATE ost_ticket SET updated=NOW() '.
+			',resolved_by='.$ticket->getStaffId();
+			$sql.=' WHERE ticket_id='.$ticket->getId();
+			mysql_query($sql);
+			//mysql_close($link);
+			
+				
+		
+		/*if($ticket->close()){
+                            $msg='Ticket #'.$ticket->getExtId().' status set to CLOSED';
+                            $note='Ticket closed by '.$thisuser->getName();
+                            $ticket->logActivity('Ticket Closed',$note);
+                            $page=$ticket=null; //Going back to main listing.
+                                                }
+                        else{
+                            $errors['err']='Problems closing the ticket. Try again';
+                                }*/
+	
+			//header( 'Location: http:///gwdroid.wrlc.org/support/include/staff/closeform.inc.php?id='.$_POST['ticket_id'] ) ;
                    if($ticket->setStatus($_POST['ticket_status']) && $ticket->reload()) {
                        $note=sprintf('%s %s the ticket on reply',$thisuser->getName(),$ticket->isOpen()?'reopened':'closed');
                        $ticket->logActivity('Ticket status changed to '.($ticket->isOpen()?'Open':'Closed'),$note);
+			}
                    }
                 }
                 //Finally upload attachment if any
@@ -225,6 +302,52 @@ if($_POST && !$errors):
                 case 'close':
                     if(!$thisuser->isadmin() && !$thisuser->canCloseTickets()){
                         $errors['err']='Perm. Denied. You are not allowed to close tickets.';
+                    }
+			//else{
+			//$query=mysql_query("select source,issue_type,helptopic from ost_ticket where ticket_id=$ticket->getId()");
+                        //$row=mysql_fetch_array($query);
+                        //echo $row['source']. ' ' . $row['issue_type'] . ' ' .$row['helptopic'];
+                        //if(is_null($row['source']) && is_null($row['issue_type']) && is_null($row['helptopic']))
+                        //{
+                        //$page='closeform.inc.php';
+                        //}
+                       else
+			{
+			 /*$link=mysql_connect("localhost", "root", "sql4gwdroid");
+                        mysql_select_db("osticket");
+
+			$sql='UPDATE ost_ticket SET updated=NOW() '.
+                        ',resolved_by='.$ticket->getStaffId();
+                        $sql.=' WHERE ticket_id='.$ticket->getId();
+                        mysql_query($sql);*/
+
+                        if($ticket->close()){
+                            $msg='Ticket #'.$ticket->getExtId().' status set to CLOSED';
+                            $note='Ticket closed without response by '.$thisuser->getName();
+                            $ticket->logActivity('Ticket Closed',$note);
+                            $page=$ticket=null; //Going back to main listing.
+                        			}
+			else{
+                            $errors['err']='Problems closing the ticket. Try again';
+                        	}
+			//}
+                    }
+                    break;
+		case 'actualclose':
+			//$page=
+			 if(!$ticket || !$thisuser->canEditTickets())
+                $errors['err']='Perm. Denied. You are not allowed to edit tickets';
+            elseif($ticket->updateinfo($_POST,$errors) && $ticket->close()){
+                $msg='Ticket updated and closed successfully';
+                $page=$ticket=null;;
+            }elseif(!$errors['err']) {
+                $errors['err']='Error(s) occured! Try again.';
+            }
+
+			break;
+		    /* case 'close':
+                    if(!$thisuser->isadmin() && !$thisuser->canCloseTickets()){
+                        $errors['err']='Perm. Denied. You are not allowed to close tickets.';
                     }else{
                         if($ticket->close()){
                             $msg='Ticket #'.$ticket->getExtId().' status set to CLOSED';
@@ -235,7 +358,8 @@ if($_POST && !$errors):
                             $errors['err']='Problems closing the ticket. Try again';
                         }
                     }
-                    break;
+                    break;*/
+
                 case 'reopen':
                     //if they can close...then assume they can reopen.
                     if(!$thisuser->isadmin() && !$thisuser->canCloseTickets()){

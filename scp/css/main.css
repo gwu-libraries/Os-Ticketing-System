@@ -61,7 +61,7 @@ strong { color:#000; }
 
 
 #container {
-  width:840px;
+  width:940px;
   text-align: left;
   margin:5px auto 0 auto;
   background:url(../images/pagebg.jpg) top left repeat-x #fff;
@@ -110,7 +110,7 @@ strong { color:#000; }
  
   #nav {
     clear:both;
-    padding:10px 0 0 30px;
+    padding:10px 0 0 10px;
   }
 
     #nav ul {
@@ -189,6 +189,8 @@ strong { color:#000; }
     #nav a.user { background:url(../images/icons/list_users.gif) 0 5px no-repeat #ececec; }
     #nav a.userPref { background:url(../images/icons/user_preferences.gif) 0 5px no-repeat #ececec; }
     #nav a.userPasswd { background:url(../images/icons/change_password.gif) 0 5px no-repeat #ececec; }
+    #nav a.report { background:url(../images/icons/report.gif) 0 5px no-repeat #ececec; }
+
 
     #nav a.preferences { background:url(../images/icons/settings.gif) 0 5px no-repeat #ececec; }
     #nav a.attachment { background:url(../images/icons/attachment.gif ) 0 5px no-repeat #ececec; }

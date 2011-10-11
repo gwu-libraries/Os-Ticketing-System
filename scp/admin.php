@@ -14,6 +14,7 @@
     vim: expandtab sw=4 ts=4 sts=4:
     $Id: $
 **********************************************************************/
+session_start();
 require('staff.inc.php');
 //Make sure the user is admin type LOCKDOWN BABY!
 if(!$thisuser or !$thisuser->isadmin()){
@@ -77,6 +78,14 @@ if($_POST && $_REQUEST['t'] && !$errors):
                 $errors['err']=$errors['err']?$errors['err']:'Internal Error';
             }
             break;
+	case 'result':
+	break;
+	case 'dynamic':
+		break;
+	/*case 'download':
+		$page='download.inc.php';
+		$inc=($page)?STAFFINC_DIR.$page:'';
+		break;*/
         case 'attach':
             if($_POST['allow_attachments'] or $_POST['upload_dir']) {
 
@@ -564,6 +573,42 @@ switch($thistab){
             $page='api.inc.php';
         endswitch;
         break;   
+    	case 'excel';
+	$nav->setTabActive('tests');
+	$page='testExcel.php';
+        break;
+	case 'printreport';
+		$nav->setTabActive('tests');
+        	$page='printreport.inc.php';
+		break;
+	case 'tests';
+	$nav->setTabActive('tests');
+	$_SESSION['exquery']='exists';
+	 /*$nav->addSubMenu(array('desc'=>'Ticket Type','href'=>'admin.php?t=email','iconclass'=>'report'));
+        $nav->addSubMenu(array('desc'=>'Staff Member','href'=>'admin.php?t=email&a=new','iconclass'=>'report'));
+        $nav->addSubMenu(array('desc'=>'Average Response Time','href'=>'admin.php?t=templates','title'=>'Email Templates','iconclass'=>'report'));
+        $nav->addSubMenu(array('desc'=>'Service Quality','href'=>'admin.php?t=banlist','title'=>'Banned Email','iconclass'=>'report'));*/
+	$page='query.inc.php';
+	break;
+    case 'result';
+	$nav->setTabActive('tests');
+	$page='result.inc.php';
+	break;
+    case 'file';
+	$nav->setTabActive('tests');
+	$_SESSION['f']=$_SESSION['filename'];
+        $page='link.inc.php';
+	 break;
+    case 'download';
+	$nav->setTabActive('tests');
+        $page='download.inc.php';
+         break;
+    case 'dynamic';
+	 $nav->setTabActive('tests');
+        $page='queryresult.inc.php';
+         break;
+
+
     case 'dashboard':
     case 'syslog':
         $nav->setTabActive('dashboard');

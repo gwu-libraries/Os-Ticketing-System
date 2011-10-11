@@ -205,11 +205,17 @@ $pagelimit=$_GET['limit']?$_GET['limit']:$thisuser->getPageLimit();
 $pagelimit=$pagelimit?$pagelimit:PAGE_LIMIT; //true default...if all fails.
 $page=($_GET['p'] && is_numeric($_GET['p']))?$_GET['p']:1;
 
+$qselect = 'SELECT ticket.ticket_id,tlock1.lock_id,ticketID,ticket.dept_id,ticket.staff_id,subject,name,ticket.email,dept_name ,staff.username '.
+',status,source,isoverdue,ticket.created,pri1.* ';
+$qfrom=' FROM '.TICKET_TABLE.' ticket LEFT JOIN '.DEPT_TABLE.' dept ON ticket.dept_id=dept.dept_id '.
+' LEFT JOIN '.TICKET_PRIORITY_TABLE.' pri1 ON ticket.priority_id=pri1.priority_id '.
+' LEFT JOIN '.TICKET_LOCK_TABLE.' tlock1 ON ticket.ticket_id=tlock1.ticket_id AND tlock1.expire>NOW() '. 
+' LEFT JOIN '.STAFF_TABLE.' staff ON ticket.staff_id=staff.staff_id';
 
-$qselect = 'SELECT DISTINCT ticket.ticket_id,lock_id,ticketID,ticket.dept_id,ticket.staff_id,subject,name,email,dept_name '.
+/*$qselect = 'SELECT DISTINCT ticket.ticket_id,lock_id,ticketID,ticket.dept_id,ticket.staff_id,subject,name,email,dept_name '.
            ',ticket.status,ticket.source,isoverdue,isanswered,ticket.created,pri.* ,count(attach.attach_id) as attachments ';
 $qfrom=' FROM '.TICKET_TABLE.' ticket '.
-       ' LEFT JOIN '.DEPT_TABLE.' dept ON ticket.dept_id=dept.dept_id ';
+       ' LEFT JOIN '.DEPT_TABLE.' dept ON ticket.dept_id=dept.dept_id ';*/
 
 if($search && $deep_search) {
     $qfrom.=' LEFT JOIN '.TICKET_MESSAGE_TABLE.' message ON (ticket.ticket_id=message.ticket_id )';
@@ -396,6 +402,8 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
 	        <th width="280">Subject</th>
 	        <th width="120">
                 <a href="tickets.php?sort=dept&order=<?=$negorder?><?=$qstr?>" title="Sort By Category <?=$negorder?>">Department</a></th>
+		<th width="150" >
+		<a href="tickets.php?sort=ass&order=<?=$negorder?><?=$qstr?>" title="Sort By Assignee <?=$negorder?>">Assigned To</a></th>
 	        <th width="70">
                 <a href="tickets.php?sort=pri&order=<?=$negorder?><?=$qstr?>" title="Sort By Priority <?=$negorder?>">Priority</a></th>
             <th width="180" >From</th>
@@ -435,6 +443,11 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
                     href="tickets.php?id=<?=$row['ticket_id']?>"><?=$subject?></a>
                     &nbsp;<?=$row['attachments']?"<span class='Icon file'>&nbsp;</span>":''?></td>
                 <td nowrap><?=Format::truncate($row['dept_name'],30)?></td>
+		<td nowrap>
+				<?php	if($row['username']!="") echo $row['username'];
+				 		else { 
+						echo '<a href="tickets.php?id='.$row['ticket_id'].'&action=assign&staff_id='.$thisuser->getId().'&assign_message='.$thisuser->getUsername().'">Claim Ticket</a>'; } ?>
+	            </td>
                 <td class="nohover" align="center" style="background-color:<?=$row['priority_color']?>;"><?=$row['priority_desc']?></td>
                 <td nowrap><?=Format::truncate($row['name'],22,strpos($row['name'],'@'))?>&nbsp;</td>
             </tr>

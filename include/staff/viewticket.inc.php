@@ -55,6 +55,13 @@ if($ticket->isOverdue())
                 <th>Create Date:</th>
                 <td><?=Format::db_datetime($ticket->getCreateDate())?></td>
             </tr>
+	    
+	    <tr>
+                <th>User Type:</th>
+                <td><?=$ticket->getType()?></td>
+            </tr>
+
+
 		</table>
      </td>
      <td width=50% valign="top">
@@ -82,6 +89,7 @@ if($ticket->isOverdue())
                 <th>Source:</th>
                 <td><?=$ticket->getSource()?></td>
             </tr>
+
         </table>
      </td>
     </tr>
@@ -91,7 +99,11 @@ if($ticket->isOverdue())
         <table align="center" class="ticketinfo" cellspacing="1" cellpadding="3" width="100%" border=0>
             <tr>
                 <th>Assigned Staff:</th>
-                <td><?=$staff?Format::htmlchars($staff->getName()):'- unassigned -'?></td>
+                <td><div style="float:left;"><?=$staff?Format::htmlchars($staff->getName()):'- unassigned -'?></div>
+                <?     if($thisuser->getId() != $ticket->getStaffId()) {?>
+                        <div style="float: right;"><a href="tickets.php?id=<?=$id?>&action=assign&staff_id=<?=$thisuser->getId()?>&assign_message=<?=$thisuser->getUsername()?>">Claim Ticket</a></div>
+                <?     }?>
+                </td>
             </tr>
             <tr>
                 <th nowrap>Last Response:</th>

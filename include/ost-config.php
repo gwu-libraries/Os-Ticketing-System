@@ -29,7 +29,7 @@ if(OSTINSTALLED!=TRUE){
 }
 
 # Encrypt/Decrypt secret key - randomly generated during installation.
-define('SECRET_SALT','430C9BFF4DC5AAD');
+define('SECRET_SALT','1E617CB7636F0DA');
 
 #Default admin email. Used only on db connection issues and related alerts.
 define('ADMIN_EMAIL','gilani@library.gwu.edu');
@@ -38,8 +38,8 @@ define('ADMIN_EMAIL','gilani@library.gwu.edu');
 define('DBTYPE','mysql');
 define('DBHOST','localhost'); 
 define('DBNAME','osticket');
-define('DBUSER','root');
-define('DBPASS','sql4gwdroid');
+define('DBUSER','ostuser');
+define('DBPASS','ostpass');
 
 #Table prefix
 define('TABLE_PREFIX','ost_');
